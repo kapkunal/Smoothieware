@@ -14,11 +14,14 @@ using std::string;
 #include "GcodeDispatch.h"
 #include "modules/robot/Conveyor.h"
 #include "libs/SerialMessage.h"
+#include "libs/SlowTicker.h"
 #include "libs/StreamOutput.h"
 #include "libs/FileStream.h"
 #include "Config.h"
 #include "checksumm.h"
 #include "ConfigValue.h"
+
+extern SlowTicker * global_slow_ticker;
 
 GcodeDispatch::GcodeDispatch() {}
 
@@ -35,6 +38,7 @@ void GcodeDispatch::on_module_loaded()
 // When a command is received, if it is a Gcode, dispatch it as an object via an event
 void GcodeDispatch::on_console_line_received(void *line)
 {
+	last_gcode_received = global_slow_ticker->millis();
     SerialMessage new_message = *static_cast<SerialMessage *>(line);
     string possible_command = new_message.message;
 
@@ -219,7 +223,8 @@ try_again:
 
         } else {
             //Request resend
-            new_message.stream->printf("rs N%d\r\n", nextline);
+            new_message.stream->printf("Resend:%d\r\n", nextline);
+            //new_message.stream->printf("rs N%d\r\n", nextline);
         }
 
     } else if( (n=possible_command.find_first_of("XYZF")) == 0 || (first_char == ' ' && n != string::npos) ) {

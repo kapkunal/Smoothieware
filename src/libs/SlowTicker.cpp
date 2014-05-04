@@ -22,8 +22,10 @@ using namespace std;
 // Modules register with a function ( callback ) and a frequency, and we then call that function at the given frequency.
 
 SlowTicker* global_slow_ticker;
+unsigned long last_gcode_received;
 
 SlowTicker::SlowTicker(){
+	ticks = 0;
     max_frequency = 0;
     global_slow_ticker = this;
 
@@ -58,10 +60,22 @@ void SlowTicker::set_frequency( int frequency ){
     LPC_TIM2->TCR = 3;  // Reset
     LPC_TIM2->TCR = 1;  // Reset
     flag_1s_count= SystemCoreClock>>2;
+	ticks_per_ms = frequency/1000;
+}
+
+unsigned long SlowTicker::millis() {
+	static unsigned long crrnt_ms = 0;
+	if(ticks/ticks_per_ms > 1000) {
+		crrnt_ms += ticks/ticks_per_ms;
+		ticks = 0;
+	}
+
+	return crrnt_ms + (ticks/ticks_per_ms);
 }
 
 // The actual interrupt being called by the timer, this is where work is done
 void SlowTicker::tick(){
+	ticks++;
 
     // Call all hooks that need to be called ( bresenham )
     for (uint32_t i=0; i<this->hooks.size(); i++){

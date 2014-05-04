@@ -21,6 +21,8 @@ using namespace std;
 #include "system_LPC17xx.h" // for SystemCoreClock
 #include <math.h>
 
+extern unsigned long last_gcode_received;
+
 class SlowTicker : public Module{
     public:
         SlowTicker();
@@ -32,6 +34,7 @@ class SlowTicker : public Module{
 
         void set_frequency( int frequency );
         void tick();
+        unsigned long millis();
         // For some reason this can't go in the .cpp, see :  http://mbed.org/forum/mbed/topic/2774/?page=1#comment-14221
         template<typename T> Hook* attach( uint32_t frequency, T *optr, uint32_t ( T::*fptr )( uint32_t ) ){
             Hook* hook = new Hook();
@@ -47,6 +50,8 @@ class SlowTicker : public Module{
         }
 
         bool flag_1s();
+	unsigned int ticks;
+	float ticks_per_ms;
 
         vector<Hook*> hooks;
         uint32_t max_frequency;
