@@ -1,9 +1,11 @@
 /* Linker script for mbed LPC1768 */
+GROUP(-lstdc++ -lsupc++ -lm -lc -lnosys -lgcc)
+
+/* Linker script to configure memory regions. */
 MEMORY
 {
-/* FLASH (rx) : ORIGIN = 0x00000000, LENGTH = 512K */
-  FLASH (rx) : ORIGIN = 16K, LENGTH = (512K - 16K)
-  RAM (rwx) : ORIGIN = 0x100000C8, LENGTH = (32K - 0xC8)
+  FLASH (rx) : ORIGIN = 0x00000000, LENGTH = 512K
+  RAM (rwx) : ORIGIN = 0x100000C8, LENGTH = 0x7F38
 
   USB_RAM(rwx) : ORIGIN = 0x2007C000, LENGTH = 16K
   ETH_RAM(rwx) : ORIGIN = 0x20080000, LENGTH = 16K
@@ -83,7 +85,6 @@ SECTIONS
     .data : AT (__etext)
     {
         __data_start__ = .;
-        Image$$RW_IRAM1$$Base = .;
         *(vtable)
         *(.data*)
 
@@ -146,13 +147,12 @@ SECTIONS
     PROVIDE(__stack = __StackTop);
     PROVIDE(__heapLimit = __HeapLimit);
     PROVIDE(__stackSize = __StackTop - __HeapLimit);
-
+    
     /* Area of memory, heap and stack, to fill on startup - 8 bytes at a time. */
     __FillStart = ALIGN(__end__, 8);
-    
+
     /* Check if data + heap + stack exceeds RAM limit */
     ASSERT(__StackLimit >= __HeapLimit, "region RAM overflowed with stack")
-
 
     /* Code can explicitly ask for data to be 
        placed in these higher RAM banks where
